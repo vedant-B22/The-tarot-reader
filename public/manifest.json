@@ -1,0 +1,21 @@
+{
+  "name": "The Tarot Reader – SSPU Halloween",
+  "short_name": "Tarot Stall",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080410",
+  "theme_color": "#080410",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/uploads/stall_upi_qr.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/uploads/stall_upi_qr.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

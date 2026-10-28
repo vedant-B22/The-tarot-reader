@@ -9,18 +9,30 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.118.0",
+    "better-sqlite3": "^13.0.3",
+    "canvas-confetti": "^1.9.4",
+    "clsx": "^2.1.1",
+    "jose": "^6.2.13",
+    "lucide-react": "^1.63.0",
+    "next": "14.2.35",
+    "qrcode": "^1.5.4",
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.35"
+    "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.35",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.35"
+    "typescript": "^5"
   }
 }
