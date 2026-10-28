@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
-const UPLOAD_DIR = path.join(process.cwd(), 'data', 'payment_proofs');
+const UPLOAD_DIR = process.env.VERCEL ? '/tmp/payment_proofs' : path.join(process.cwd(), 'data', 'payment_proofs');
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
