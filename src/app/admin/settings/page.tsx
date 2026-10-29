@@ -20,6 +20,7 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
 
   // Form Fields
+  const [isEventMode, setIsEventMode] = useState(false);
   const [stallName, setStallName] = useState('');
   const [themeSubtext, setThemeSubtext] = useState('');
   const [banner, setBanner] = useState('');
@@ -45,6 +46,7 @@ export default function AdminSettingsPage() {
         const json = await res.json();
         const s = json.settings;
         setSettings(s);
+        setIsEventMode(Boolean(s.is_event_mode));
         setStallName(s.stall_name);
         setThemeSubtext(s.theme_subtext);
         setBanner(s.announcement_banner);
@@ -73,6 +75,7 @@ export default function AdminSettingsPage() {
 
     try {
       const formData = new FormData();
+      formData.append('is_event_mode', String(isEventMode));
       formData.append('stall_name', stallName);
       formData.append('theme_subtext', themeSubtext);
       formData.append('announcement_banner', banner);
@@ -153,6 +156,33 @@ export default function AdminSettingsPage() {
       </div>
 
       <form onSubmit={handleSaveSettings} className="space-y-6">
+        {/* Master Operating Mode Switch */}
+        <div className="bg-gradient-to-r from-purple-950/80 via-[#190933] to-purple-950/80 border-2 border-amber-500/50 rounded-2xl p-5 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <span className="text-[10px] uppercase font-bold text-amber-300 tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 inline-block mb-1">
+              Website Operating Mode
+            </span>
+            <h4 className="text-sm font-black text-white">
+              {isEventMode ? 'Live Event Stall Mode (Active)' : 'Post-Event Landing & Online Booking Mode (Active)'}
+            </h4>
+            <p className="text-xs text-purple-200/80 mt-0.5 max-w-lg">
+              {isEventMode
+                ? 'Public home page is showing the Live Stall Queue Board and Walk-in registrations.'
+                : 'Public home page is showing the new Post-Event Landing Site with Online Bookings, Card of the Day, and Contact options.'}
+            </p>
+          </div>
+
+          <label className="relative inline-flex items-center cursor-pointer shrink-0">
+            <input
+              type="checkbox"
+              checked={isEventMode}
+              onChange={(e) => setIsEventMode(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-14 h-7 bg-purple-950 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500"></div>
+          </label>
+        </div>
+
         {/* Stall Identity */}
         <div className="bg-[#120824] border border-purple-900/60 rounded-2xl p-5 shadow-lg space-y-4">
           <h4 className="text-xs font-black text-amber-300 uppercase tracking-wider">Stall Identity & Theming</h4>

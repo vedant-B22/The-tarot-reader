@@ -58,12 +58,66 @@ function mapPayment(row: any): Payment {
 }
 
 function mapSettings(row: any): StallSettings {
+  if (!row) {
+    return {
+      id: 1,
+      stall_name: 'The Tarot Reader',
+      theme_subtext: 'Clarity through the cards',
+      announcement_banner: '✨ Live Halloween Stall Event Concluded! Online bookings & 1-on-1 private readings are now open.',
+      is_queue_open: false,
+      queue_paused_message: 'Queue is temporarily paused.',
+      max_queue_cap: 60,
+      scheduled_opening_time: '10:00',
+      scheduled_closing_time: '22:00',
+      upi_id: '9527318721@ybl',
+      upi_qr_url: '/uploads/stall_upi_qr.jpg',
+      allow_pay_later: false,
+      auto_noshow_minutes: 5,
+      whatsapp_helpline: '+919226634637',
+      disclaimer_text: 'Tarot readings are for personal guidance, self-reflection, and entertainment, not a substitute for professional, medical, legal or financial advice.',
+      first_timer_discount_inr: 0,
+      group_discount_inr: 20,
+      happy_hour_enabled: false,
+      happy_hour_start: '17:00',
+      happy_hour_end: '19:00',
+      happy_hour_percent: 15,
+      referrer_reward_inr: 25,
+      referee_discount_inr: 15,
+      referral_reward_on_completed_only: true,
+      admin_manual_discount_threshold_inr: 50,
+      data_retention_days: 30,
+      updated_at: new Date().toISOString(),
+      is_event_mode: false,
+      hero_title: 'The Tarot Reader',
+      hero_tagline: 'Clarity through the cards',
+      whatsapp_number: '+91 92266 34637',
+      whatsapp_prefill_message: 'Hi, I\'d like a tarot reading',
+      instagram_handle: 'this.is_vedant_12',
+      tarot_handle: 'the_arcane_diaries',
+      bio_text: 'Intuitive Tarot Reader & Guide with The Arcane Diaries. Uncovering patterns in love, career, and personal destiny through the sacred symbolism of the cards.',
+      bio_photo_url: '',
+      announcement_banner_active: true,
+    };
+  }
+
   return {
     ...row,
+    stall_name: row.stall_name || 'The Tarot Reader',
+    theme_subtext: row.theme_subtext || 'Clarity through the cards',
     is_queue_open: Boolean(row.is_queue_open),
     allow_pay_later: Boolean(row.allow_pay_later),
     happy_hour_enabled: Boolean(row.happy_hour_enabled),
     referral_reward_on_completed_only: Boolean(row.referral_reward_on_completed_only),
+    is_event_mode: Boolean(row.is_event_mode),
+    hero_title: row.hero_title || 'The Tarot Reader',
+    hero_tagline: row.hero_tagline || 'Clarity through the cards',
+    whatsapp_number: row.whatsapp_number || '+91 92266 34637',
+    whatsapp_prefill_message: row.whatsapp_prefill_message || 'Hi, I\'d like a tarot reading',
+    instagram_handle: row.instagram_handle || 'this.is_vedant_12',
+    tarot_handle: row.tarot_handle || 'the_arcane_diaries',
+    bio_text: row.bio_text || 'Intuitive Tarot Reader & Guide with The Arcane Diaries. Uncovering patterns in love, career, and personal destiny through the sacred symbolism of the cards.',
+    bio_photo_url: row.bio_photo_url || '',
+    announcement_banner_active: row.announcement_banner_active !== undefined ? Boolean(row.announcement_banner_active) : true,
   };
 }
 
@@ -88,6 +142,8 @@ export function updateSettings(data: Partial<StallSettings>, adminId?: string, a
       allow_pay_later: updated.allow_pay_later ? 1 : 0,
       happy_hour_enabled: updated.happy_hour_enabled ? 1 : 0,
       referral_reward_on_completed_only: updated.referral_reward_on_completed_only ? 1 : 0,
+      is_event_mode: updated.is_event_mode ? 1 : 0,
+      announcement_banner_active: updated.announcement_banner_active ? 1 : 0,
     });
 
     logAudit({
@@ -1280,4 +1336,366 @@ export function resetEvent(confirmationText: string, actorName: string): boolean
   });
 
   return true;
+}
+
+// -------------------------------------------------------------
+// POST-EVENT: BOOKING REQUESTS REPOSITORY
+// -------------------------------------------------------------
+export function createBookingRequest(data: {
+  name: string;
+  phone: string;
+  service_id: string;
+  service_name: string;
+  preferred_date: string;
+  preferred_time: string;
+  note?: string;
+  promo_code?: string;
+  discount_inr?: number;
+  final_price_inr: number;
+}): { id: string; name: string; phone: string; service_name: string } {
+  const id = 'bk_' + Date.now().toString(36) + '_' + crypto.randomBytes(3).toString('hex');
+  const now = new Date().toISOString();
+
+  db.prepare(`
+    INSERT INTO booking_requests (
+      id, name, phone, service_id, service_name, preferred_date, preferred_time,
+      note, promo_code, discount_inr, final_price_inr, status, created_at, updated_at
+    ) VALUES (
+      @id, @name, @phone, @service_id, @service_name, @preferred_date, @preferred_time,
+      @note, @promo_code, @discount_inr, @final_price_inr, 'new', @created_at, @updated_at
+    )
+  `).run({
+    id,
+    name: data.name.trim(),
+    phone: data.phone.trim(),
+    service_id: data.service_id,
+    service_name: data.service_name,
+    preferred_date: data.preferred_date,
+    preferred_time: data.preferred_time,
+    note: data.note?.trim() || null,
+    promo_code: data.promo_code?.trim().toUpperCase() || null,
+    discount_inr: data.discount_inr || 0,
+    final_price_inr: data.final_price_inr,
+    created_at: now,
+    updated_at: now,
+  });
+
+  // Track as customer / lead as well
+  try {
+    createLeadSubscriber({
+      name: data.name,
+      phone: data.phone,
+      source: 'booking',
+      consent_given: true,
+    });
+  } catch {}
+
+  return { id, name: data.name, phone: data.phone, service_name: data.service_name };
+}
+
+export function getAllBookingRequests(statusFilter?: string) {
+  let query = 'SELECT * FROM booking_requests';
+  const params: any[] = [];
+  if (statusFilter && statusFilter !== 'all') {
+    query += ' WHERE status = ?';
+    params.push(statusFilter);
+  }
+  query += ' ORDER BY created_at DESC';
+  return db.prepare(query).all(...params) as any[];
+}
+
+export function getBookingRequestById(id: string) {
+  return db.prepare('SELECT * FROM booking_requests WHERE id = ?').get(id) as any;
+}
+
+export function updateBookingStatus(id: string, status: string, adminNotes?: string) {
+  const now = new Date().toISOString();
+  if (adminNotes !== undefined) {
+    db.prepare(`
+      UPDATE booking_requests 
+      SET status = ?, admin_notes = ?, updated_at = ? 
+      WHERE id = ?
+    `).run(status, adminNotes, now, id);
+  } else {
+    db.prepare(`
+      UPDATE booking_requests 
+      SET status = ?, updated_at = ? 
+      WHERE id = ?
+    `).run(status, now, id);
+  }
+  return getBookingRequestById(id);
+}
+
+export function deleteBookingRequest(id: string): boolean {
+  const res = db.prepare('DELETE FROM booking_requests WHERE id = ?').run(id);
+  return res.changes > 0;
+}
+
+// -------------------------------------------------------------
+// POST-EVENT: LEADS & NEWSLETTER SUBSCRIBERS REPOSITORY
+// -------------------------------------------------------------
+export function createLeadSubscriber(data: {
+  name: string;
+  phone: string;
+  source: 'newsletter' | 'event_interest' | 'booking';
+  event_id?: string;
+  event_title?: string;
+  consent_given?: boolean;
+}) {
+  const existing = db.prepare('SELECT * FROM leads_subscribers WHERE phone = ?').get(data.phone.trim()) as any;
+  if (existing) {
+    if (existing.is_opted_out) {
+      db.prepare('UPDATE leads_subscribers SET is_opted_out = 0 WHERE id = ?').run(existing.id);
+    }
+    return existing;
+  }
+
+  const id = 'lead_' + Date.now().toString(36) + '_' + crypto.randomBytes(3).toString('hex');
+  const now = new Date().toISOString();
+
+  db.prepare(`
+    INSERT INTO leads_subscribers (
+      id, name, phone, source, event_id, event_title, consent_given, is_opted_out, created_at
+    ) VALUES (
+      @id, @name, @phone, @source, @event_id, @event_title, @consent_given, 0, @created_at
+    )
+  `).run({
+    id,
+    name: data.name.trim(),
+    phone: data.phone.trim(),
+    source: data.source,
+    event_id: data.event_id || null,
+    event_title: data.event_title || null,
+    consent_given: data.consent_given !== false ? 1 : 0,
+    created_at: now,
+  });
+
+  return { id, name: data.name, phone: data.phone, source: data.source };
+}
+
+export function getAllLeadsSubscribers() {
+  return db.prepare('SELECT * FROM leads_subscribers ORDER BY created_at DESC').all() as any[];
+}
+
+export function toggleLeadOptOut(id: string, isOptedOut: boolean) {
+  db.prepare('UPDATE leads_subscribers SET is_opted_out = ? WHERE id = ?').run(isOptedOut ? 1 : 0, id);
+  return db.prepare('SELECT * FROM leads_subscribers WHERE id = ?').get(id);
+}
+
+export function deleteLeadSubscriber(id: string): boolean {
+  const res = db.prepare('DELETE FROM leads_subscribers WHERE id = ?').run(id);
+  return res.changes > 0;
+}
+
+// -------------------------------------------------------------
+// POST-EVENT: TESTIMONIALS & FEEDBACK REPOSITORY
+// -------------------------------------------------------------
+export function createTestimonial(data: {
+  customer_name: string;
+  service_name?: string;
+  rating: number;
+  feedback_text: string;
+  token_id?: string;
+  is_approved?: boolean;
+}) {
+  const id = 'tst_' + Date.now().toString(36) + '_' + crypto.randomBytes(3).toString('hex');
+  const now = new Date().toISOString();
+
+  db.prepare(`
+    INSERT INTO testimonials (
+      id, customer_name, service_name, rating, feedback_text, is_approved, token_id, created_at
+    ) VALUES (
+      @id, @customer_name, @service_name, @rating, @feedback_text, @is_approved, @token_id, @created_at
+    )
+  `).run({
+    id,
+    customer_name: data.customer_name.trim(),
+    service_name: data.service_name?.trim() || 'Tarot Reading',
+    rating: Math.max(1, Math.min(5, Math.round(data.rating))),
+    feedback_text: data.feedback_text.trim(),
+    is_approved: data.is_approved ? 1 : 0,
+    token_id: data.token_id || null,
+    created_at: now,
+  });
+
+  return db.prepare('SELECT * FROM testimonials WHERE id = ?').get(id);
+}
+
+export function getAllTestimonials(approvedOnly = false) {
+  let query = 'SELECT * FROM testimonials';
+  if (approvedOnly) {
+    query += ' WHERE is_approved = 1';
+  }
+  query += ' ORDER BY created_at DESC';
+  const rows = db.prepare(query).all() as any[];
+  return rows.map(r => ({
+    ...r,
+    is_approved: Boolean(r.is_approved),
+  }));
+}
+
+export function updateTestimonialApproval(id: string, isApproved: boolean) {
+  db.prepare('UPDATE testimonials SET is_approved = ? WHERE id = ?').run(isApproved ? 1 : 0, id);
+  return db.prepare('SELECT * FROM testimonials WHERE id = ?').get(id);
+}
+
+export function deleteTestimonial(id: string): boolean {
+  const res = db.prepare('DELETE FROM testimonials WHERE id = ?').run(id);
+  return res.changes > 0;
+}
+
+// -------------------------------------------------------------
+// POST-EVENT: UPCOMING EVENTS REPOSITORY
+// -------------------------------------------------------------
+export function getAllUpcomingEvents(activeOnly = false) {
+  let query = 'SELECT * FROM upcoming_events';
+  if (activeOnly) {
+    query += ' WHERE is_active = 1';
+  }
+  query += ' ORDER BY sort_order ASC, created_at ASC';
+  const rows = db.prepare(query).all() as any[];
+  return rows.map(r => ({
+    ...r,
+    is_active: Boolean(r.is_active),
+  }));
+}
+
+export function createUpcomingEvent(data: {
+  title: string;
+  description: string;
+  date_text: string;
+  location: string;
+  is_active?: boolean;
+  sort_order?: number;
+}) {
+  const id = 'evt_' + Date.now().toString(36) + '_' + crypto.randomBytes(3).toString('hex');
+  const now = new Date().toISOString();
+
+  db.prepare(`
+    INSERT INTO upcoming_events (
+      id, title, description, date_text, location, is_active, sort_order, created_at
+    ) VALUES (
+      @id, @title, @description, @date_text, @location, @is_active, @sort_order, @created_at
+    )
+  `).run({
+    id,
+    title: data.title.trim(),
+    description: data.description.trim(),
+    date_text: data.date_text.trim(),
+    location: data.location.trim(),
+    is_active: data.is_active !== false ? 1 : 0,
+    sort_order: data.sort_order || 0,
+    created_at: now,
+  });
+
+  return db.prepare('SELECT * FROM upcoming_events WHERE id = ?').get(id);
+}
+
+export function updateUpcomingEvent(id: string, updates: Partial<{
+  title: string;
+  description: string;
+  date_text: string;
+  location: string;
+  is_active: boolean;
+  sort_order: number;
+}>) {
+  const current = db.prepare('SELECT * FROM upcoming_events WHERE id = ?').get(id) as any;
+  if (!current) return null;
+
+  const updated = {
+    ...current,
+    ...updates,
+    is_active: updates.is_active !== undefined ? (updates.is_active ? 1 : 0) : current.is_active,
+  };
+
+  db.prepare(`
+    UPDATE upcoming_events 
+    SET title = @title, description = @description, date_text = @date_text,
+        location = @location, is_active = @is_active, sort_order = @sort_order
+    WHERE id = @id
+  `).run(updated);
+
+  return db.prepare('SELECT * FROM upcoming_events WHERE id = ?').get(id);
+}
+
+export function deleteUpcomingEvent(id: string): boolean {
+  const res = db.prepare('DELETE FROM upcoming_events WHERE id = ?').run(id);
+  return res.changes > 0;
+}
+
+// -------------------------------------------------------------
+// POST-EVENT: GALLERY IMAGES REPOSITORY
+// -------------------------------------------------------------
+export function getAllGalleryImages() {
+  return db.prepare('SELECT * FROM gallery_images ORDER BY sort_order ASC, created_at DESC').all() as any[];
+}
+
+export function createGalleryImage(data: { image_url: string; caption: string; sort_order?: number }) {
+  const id = 'img_' + Date.now().toString(36) + '_' + crypto.randomBytes(3).toString('hex');
+  const now = new Date().toISOString();
+
+  db.prepare(`
+    INSERT INTO gallery_images (id, image_url, caption, sort_order, created_at)
+    VALUES (@id, @image_url, @caption, @sort_order, @created_at)
+  `).run({
+    id,
+    image_url: data.image_url.trim(),
+    caption: data.caption.trim(),
+    sort_order: data.sort_order || 0,
+    created_at: now,
+  });
+
+  return db.prepare('SELECT * FROM gallery_images WHERE id = ?').get(id);
+}
+
+export function deleteGalleryImage(id: string): boolean {
+  const res = db.prepare('DELETE FROM gallery_images WHERE id = ?').run(id);
+  return res.changes > 0;
+}
+
+// -------------------------------------------------------------
+// POST-EVENT: FIRST-PARTY CLICK TRACKING REPOSITORY
+// -------------------------------------------------------------
+export function incrementClickStat(eventKey: string) {
+  const now = new Date().toISOString();
+  db.prepare(`
+    INSERT INTO click_stats (event_key, click_count, last_clicked_at)
+    VALUES (?, 1, ?)
+    ON CONFLICT(event_key) DO UPDATE SET
+      click_count = click_count + 1,
+      last_clicked_at = excluded.last_clicked_at
+  `).run(eventKey, now);
+
+  return db.prepare('SELECT * FROM click_stats WHERE event_key = ?').get(eventKey);
+}
+
+export function getAllClickStats() {
+  return db.prepare('SELECT * FROM click_stats ORDER BY click_count DESC').all() as any[];
+}
+
+// -------------------------------------------------------------
+// POST-EVENT: READ-ONLY EVENT ARCHIVE
+// -------------------------------------------------------------
+export function getArchivedEventData() {
+  const tokens = getAllQueueTokens();
+  const payments = getAllPayments();
+  const customers = getAllCustomers();
+  const metrics = getLiveMetrics();
+  const feedback = tokens.filter(t => t.customer_feedback_stars !== null).map(t => ({
+    id: t.id,
+    token_display: t.token_display,
+    customer_name: t.customer_name,
+    stars: t.customer_feedback_stars,
+    comment: t.customer_feedback_comment,
+    submitted_at: t.feedback_submitted_at,
+  }));
+
+  return {
+    metrics,
+    totalTokens: tokens.length,
+    tokens,
+    payments,
+    customers,
+    feedback,
+  };
 }

@@ -21,7 +21,11 @@ import {
   Volume2,
   VolumeX,
   Menu,
-  X
+  X,
+  Inbox,
+  Star,
+  Archive,
+  BarChart3
 } from 'lucide-react';
 import { playMysticalChime } from '@/lib/utils';
 
@@ -93,12 +97,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const navLinks = [
-    { href: '/admin', label: 'Queue', icon: Users },
+    { href: '/admin', label: 'Overview & Queue', icon: Users },
+    { href: '/admin/bookings', label: 'Bookings Inbox', icon: Inbox },
+    { href: '/admin/content', label: 'Site Content', icon: FileText },
+    { href: '/admin/leads', label: 'Leads & VIP List', icon: UserCheck },
+    { href: '/admin/testimonials', label: 'Reviews', icon: Star },
+    { href: '/admin/analytics', label: 'Click Stats', icon: BarChart3 },
     { href: '/admin/payments', label: 'Payments', icon: CreditCard },
     { href: '/admin/services', label: 'Services', icon: Compass },
-    { href: '/admin/discounts', label: 'Discounts & Referrals', icon: Tag },
-    { href: '/admin/customers', label: 'Customers', icon: UserCheck },
-    { href: '/admin/settings', label: 'Settings', icon: SettingsIcon },
+    { href: '/admin/discounts', label: 'Discounts', icon: Tag },
+    { href: '/admin/archive', label: 'Event Archive', icon: Archive },
+    { href: '/admin/settings', label: 'Settings & Modes', icon: SettingsIcon },
     ...(admin?.role === 'super_admin' ? [
       { href: '/admin/team', label: 'Admins & Permissions', icon: ShieldCheck },
       { href: '/admin/audit', label: 'Audit Log', icon: FileText },

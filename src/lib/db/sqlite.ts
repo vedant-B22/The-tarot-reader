@@ -31,11 +31,11 @@ export function initSqliteDb() {
     db.exec(`
       CREATE TABLE IF NOT EXISTS settings (
         id INTEGER PRIMARY KEY CHECK (id = 1),
-        stall_name TEXT NOT NULL DEFAULT 'The Mystical Tarot – SSPU Halloween',
-        theme_subtext TEXT NOT NULL DEFAULT 'Step past the veil. Uncover love, destiny, and the unseen.',
-        announcement_banner TEXT NOT NULL DEFAULT '🎃 Halloween Stall Special: Group reading gets instant ₹20 discount!',
-        is_queue_open INTEGER NOT NULL DEFAULT 1,
-        queue_paused_message TEXT NOT NULL DEFAULT 'Queue is temporarily paused for 10 minutes while our readers recharge mystical energies.',
+        stall_name TEXT NOT NULL DEFAULT 'The Tarot Reader',
+        theme_subtext TEXT NOT NULL DEFAULT 'Clarity through the cards',
+        announcement_banner TEXT NOT NULL DEFAULT '✨ Live Halloween Stall Event Concluded! Online bookings & 1-on-1 private readings are now open.',
+        is_queue_open INTEGER NOT NULL DEFAULT 0,
+        queue_paused_message TEXT NOT NULL DEFAULT 'Queue is temporarily paused.',
         max_queue_cap INTEGER NOT NULL DEFAULT 60,
         scheduled_opening_time TEXT DEFAULT '10:00',
         scheduled_closing_time TEXT DEFAULT '22:00',
@@ -43,8 +43,8 @@ export function initSqliteDb() {
         upi_qr_url TEXT NOT NULL DEFAULT '/uploads/stall_upi_qr.jpg',
         allow_pay_later INTEGER NOT NULL DEFAULT 0,
         auto_noshow_minutes INTEGER NOT NULL DEFAULT 5,
-        whatsapp_helpline TEXT NOT NULL DEFAULT '+919527318721',
-        disclaimer_text TEXT NOT NULL DEFAULT 'Tarot readings are for entertainment and guidance, not professional, medical, legal or financial advice.',
+        whatsapp_helpline TEXT NOT NULL DEFAULT '+919226634637',
+        disclaimer_text TEXT NOT NULL DEFAULT 'Tarot readings are for personal guidance, self-reflection, and entertainment, not a substitute for professional, medical, legal or financial advice.',
         first_timer_discount_inr INTEGER NOT NULL DEFAULT 0,
         group_discount_inr INTEGER NOT NULL DEFAULT 20,
         happy_hour_enabled INTEGER NOT NULL DEFAULT 0,
@@ -56,7 +56,19 @@ export function initSqliteDb() {
         referral_reward_on_completed_only INTEGER NOT NULL DEFAULT 1,
         admin_manual_discount_threshold_inr INTEGER NOT NULL DEFAULT 50,
         data_retention_days INTEGER NOT NULL DEFAULT 30,
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+
+        -- Post-Event Landing & Booking additions
+        is_event_mode INTEGER NOT NULL DEFAULT 0,
+        hero_title TEXT NOT NULL DEFAULT 'The Tarot Reader',
+        hero_tagline TEXT NOT NULL DEFAULT 'Clarity through the cards',
+        whatsapp_number TEXT NOT NULL DEFAULT '+91 92266 34637',
+        whatsapp_prefill_message TEXT NOT NULL DEFAULT 'Hi, I''d like a tarot reading',
+        instagram_handle TEXT NOT NULL DEFAULT 'this.is_vedant_12',
+        tarot_handle TEXT NOT NULL DEFAULT 'the_arcane_diaries',
+        bio_text TEXT NOT NULL DEFAULT 'Intuitive Tarot Reader & Guide with The Arcane Diaries. Uncovering patterns in love, career, and personal destiny through the sacred symbolism of the cards.',
+        bio_photo_url TEXT DEFAULT '',
+        announcement_banner_active INTEGER NOT NULL DEFAULT 1
       );
 
       CREATE TABLE IF NOT EXISTS admin_users (
@@ -200,8 +212,75 @@ export function initSqliteDb() {
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
 
+      -- Post-Event Booking & Landing Tables
+      CREATE TABLE IF NOT EXISTS booking_requests (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        service_id TEXT NOT NULL,
+        service_name TEXT NOT NULL,
+        preferred_date TEXT NOT NULL,
+        preferred_time TEXT NOT NULL,
+        note TEXT,
+        promo_code TEXT,
+        discount_inr INTEGER NOT NULL DEFAULT 0,
+        final_price_inr INTEGER NOT NULL,
+        status TEXT NOT NULL DEFAULT 'new',
+        admin_notes TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS leads_subscribers (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        source TEXT NOT NULL,
+        event_id TEXT,
+        event_title TEXT,
+        consent_given INTEGER NOT NULL DEFAULT 1,
+        is_opted_out INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS testimonials (
+        id TEXT PRIMARY KEY,
+        customer_name TEXT NOT NULL,
+        service_name TEXT,
+        rating INTEGER NOT NULL DEFAULT 5,
+        feedback_text TEXT NOT NULL,
+        is_approved INTEGER NOT NULL DEFAULT 0,
+        token_id TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS upcoming_events (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        date_text TEXT NOT NULL,
+        location TEXT NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS gallery_images (
+        id TEXT PRIMARY KEY,
+        image_url TEXT NOT NULL,
+        caption TEXT NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS click_stats (
+        event_key TEXT PRIMARY KEY,
+        click_count INTEGER NOT NULL DEFAULT 0,
+        last_clicked_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
       -- Seed settings if empty
-      INSERT OR IGNORE INTO settings (id, stall_name) VALUES (1, 'The Mystical Tarot – SSPU Halloween');
+      INSERT OR IGNORE INTO settings (id, stall_name) VALUES (1, 'The Tarot Reader');
 
       -- Seed initial editable services if empty
       INSERT OR IGNORE INTO services (id, name, description, card_count, duration_minutes, price_inr, is_group, group_size, is_active, sort_order)
@@ -217,6 +296,24 @@ export function initSqliteDb() {
         ('rdr-1', 'Table 1 (Rhea)', 1),
         ('rdr-2', 'Table 2 (Aarav)', 1);
     `);
+
+    // Safe column migrations for existing database files
+    const newSettingsCols = [
+      "ALTER TABLE settings ADD COLUMN is_event_mode INTEGER NOT NULL DEFAULT 0",
+      "ALTER TABLE settings ADD COLUMN hero_title TEXT NOT NULL DEFAULT 'The Tarot Reader'",
+      "ALTER TABLE settings ADD COLUMN hero_tagline TEXT NOT NULL DEFAULT 'Clarity through the cards'",
+      "ALTER TABLE settings ADD COLUMN whatsapp_number TEXT NOT NULL DEFAULT '+91 92266 34637'",
+      "ALTER TABLE settings ADD COLUMN whatsapp_prefill_message TEXT NOT NULL DEFAULT 'Hi, I''d like a tarot reading'",
+      "ALTER TABLE settings ADD COLUMN instagram_handle TEXT NOT NULL DEFAULT 'this.is_vedant_12'",
+      "ALTER TABLE settings ADD COLUMN tarot_handle TEXT NOT NULL DEFAULT 'the_arcane_diaries'",
+      "ALTER TABLE settings ADD COLUMN bio_text TEXT NOT NULL DEFAULT 'Intuitive Tarot Reader & Guide with The Arcane Diaries. Uncovering patterns in love, career, and personal destiny through the sacred symbolism of the cards.'",
+      "ALTER TABLE settings ADD COLUMN bio_photo_url TEXT DEFAULT ''",
+      "ALTER TABLE settings ADD COLUMN announcement_banner_active INTEGER NOT NULL DEFAULT 1"
+    ];
+    for (const alterSql of newSettingsCols) {
+      try { db.exec(alterSql); } catch (e) {}
+    }
+
     isInitialized = true;
   } catch (e) {
     // If table already exists or another thread initialized it

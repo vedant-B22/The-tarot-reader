@@ -221,6 +221,79 @@ export default function AdminQueueDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Post-Event Status & Navigation Banner */}
+      {!settings?.is_event_mode && (
+        <div className="p-6 rounded-3xl bg-gradient-to-r from-purple-950/90 via-[#180933] to-purple-950/90 border-2 border-amber-500/40 shadow-2xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Post-Event Landing & Booking Mode Active</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white">The Halloween Event is Over</h2>
+              <p className="text-xs text-purple-200/80 mt-1 max-w-xl">
+                The public home page has been converted into the Post-Event online booking portal, Card of the Day, and direct contact site. Event data is safely preserved in the Event Archive.
+              </p>
+            </div>
+
+            <a
+              href="/admin/settings"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-900/60 hover:bg-purple-800 border border-purple-700 text-amber-300 text-xs font-bold transition-all shrink-0"
+            >
+              <span>Mode Settings</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </a>
+          </div>
+
+          {/* Quick Shortcuts to Post-Event Modules */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-purple-900/60">
+            <a
+              href="/admin/bookings"
+              className="p-3 rounded-2xl bg-black/40 hover:bg-purple-900/40 border border-purple-800/60 text-left transition-all group"
+            >
+              <p className="text-xs font-bold text-white group-hover:text-amber-300 flex items-center justify-between">
+                <span>Bookings Inbox</span>
+                <span className="text-amber-400 text-xs font-mono">→</span>
+              </p>
+              <p className="text-[10px] text-purple-300/70 mt-0.5">Review & reply on WhatsApp</p>
+            </a>
+
+            <a
+              href="/admin/content"
+              className="p-3 rounded-2xl bg-black/40 hover:bg-purple-900/40 border border-purple-800/60 text-left transition-all group"
+            >
+              <p className="text-xs font-bold text-white group-hover:text-amber-300 flex items-center justify-between">
+                <span>Site Content</span>
+                <span className="text-amber-400 text-xs font-mono">→</span>
+              </p>
+              <p className="text-[10px] text-purple-300/70 mt-0.5">Edit bio, social links & banner</p>
+            </a>
+
+            <a
+              href="/admin/archive"
+              className="p-3 rounded-2xl bg-black/40 hover:bg-purple-900/40 border border-purple-800/60 text-left transition-all group"
+            >
+              <p className="text-xs font-bold text-white group-hover:text-amber-300 flex items-center justify-between">
+                <span>Event Archive</span>
+                <span className="text-amber-400 text-xs font-mono">→</span>
+              </p>
+              <p className="text-[10px] text-purple-300/70 mt-0.5">Read-only tokens & revenue</p>
+            </a>
+
+            <a
+              href="/admin/analytics"
+              className="p-3 rounded-2xl bg-black/40 hover:bg-purple-900/40 border border-purple-800/60 text-left transition-all group"
+            >
+              <p className="text-xs font-bold text-white group-hover:text-amber-300 flex items-center justify-between">
+                <span>Click Stats</span>
+                <span className="text-amber-400 text-xs font-mono">→</span>
+              </p>
+              <p className="text-[10px] text-purple-300/70 mt-0.5">WhatsApp & profile clicks</p>
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Metrics Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <div className="p-3.5 rounded-2xl bg-[#140a28] border border-purple-900/50">

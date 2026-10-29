@@ -212,6 +212,16 @@ export async function pushSettingsToSupabase(settings: StallSettings): Promise<v
       referral_reward_on_completed_only: settings.referral_reward_on_completed_only,
       admin_manual_discount_threshold_inr: settings.admin_manual_discount_threshold_inr,
       data_retention_days: settings.data_retention_days,
+      is_event_mode: settings.is_event_mode,
+      hero_title: settings.hero_title,
+      hero_tagline: settings.hero_tagline,
+      whatsapp_number: settings.whatsapp_number,
+      whatsapp_prefill_message: settings.whatsapp_prefill_message,
+      instagram_handle: settings.instagram_handle,
+      tarot_handle: settings.tarot_handle,
+      bio_text: settings.bio_text,
+      bio_photo_url: settings.bio_photo_url,
+      announcement_banner_active: settings.announcement_banner_active,
       updated_at: new Date().toISOString(),
     });
   } catch (err) {

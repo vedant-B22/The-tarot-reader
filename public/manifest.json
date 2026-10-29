@@ -1,10 +1,11 @@
 {
-  "name": "The Tarot Reader – SSPU Halloween",
-  "short_name": "Tarot Stall",
+  "name": "The Tarot Reader • The Arcane Diaries",
+  "short_name": "Tarot Reader",
+  "description": "Clarity through the cards. Personal intuitive tarot readings and daily guidance by Vedant Baviskar.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#080410",
-  "theme_color": "#080410",
+  "background_color": "#070210",
+  "theme_color": "#070210",
   "orientation": "portrait-primary",
   "icons": [
     {

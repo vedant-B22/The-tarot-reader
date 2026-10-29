@@ -194,6 +194,86 @@ export interface StallSettings {
   admin_manual_discount_threshold_inr: number;
   data_retention_days: number;
   updated_at: string;
+
+  // Post-Event Landing & Booking additions
+  is_event_mode: boolean;
+  hero_title: string;
+  hero_tagline: string;
+  whatsapp_number: string;
+  whatsapp_prefill_message: string;
+  instagram_handle: string;
+  tarot_handle: string;
+  bio_text: string;
+  bio_photo_url: string;
+  announcement_banner_active: boolean;
+}
+
+export type BookingStatus = 'new' | 'contacted' | 'booked' | 'completed' | 'cancelled';
+
+export interface BookingRequest {
+  id: string;
+  name: string;
+  phone: string;
+  service_id: string;
+  service_name: string;
+  preferred_date: string;
+  preferred_time: string;
+  note: string | null;
+  promo_code: string | null;
+  discount_inr: number;
+  final_price_inr: number;
+  status: BookingStatus;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LeadSubscriber {
+  id: string;
+  name: string;
+  phone: string;
+  source: 'newsletter' | 'event_interest' | 'booking';
+  event_id: string | null;
+  event_title: string | null;
+  consent_given: boolean;
+  is_opted_out: boolean;
+  created_at: string;
+}
+
+export interface Testimonial {
+  id: string;
+  customer_name: string;
+  service_name: string | null;
+  rating: number; // 1 to 5
+  feedback_text: string;
+  is_approved: boolean;
+  token_id: string | null;
+  created_at: string;
+}
+
+export interface UpcomingEvent {
+  id: string;
+  title: string;
+  description: string;
+  date_text: string;
+  location: string;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface GalleryImage {
+  id: string;
+  image_url: string;
+  caption: string;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface ClickStat {
+  event_key: string;
+  click_count: number;
+  last_clicked_at: string;
 }
 
 export interface AuditLog {
