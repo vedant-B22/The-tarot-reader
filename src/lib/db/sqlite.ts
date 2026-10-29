@@ -285,10 +285,11 @@ export function initSqliteDb() {
       -- Seed initial editable services if empty
       INSERT OR IGNORE INTO services (id, name, description, card_count, duration_minutes, price_inr, is_group, group_size, is_active, sort_order)
       VALUES 
-        ('srv-1', 'Question Specific Tarot', 'Focused insight into your immediate burning question or specific situation.', 1, 8, 49, 0, 1, 1, 1),
-        ('srv-2', 'Destiny Card', 'Three cards drawn to reveal your path: one of life, one of love, and one of career.', 3, 15, 99, 0, 1, 1, 2),
+        ('srv-1', 'Question Specific Tarot', 'Focused insight into your immediate burning question. (Compulsory: Must complete a Destiny Card reading prior to this).', 1, 8, 49, 0, 1, 1, 1),
+        ('srv-2', 'Destiny Card', 'Three cards drawn to reveal your path: one of life, one of love, and one of career.', 3, 15, 150, 0, 1, 1, 2),
         ('srv-3', 'Love Specific Cards', 'Three focused questions uncovering three deep, love life-related answers and relationship clarity.', 3, 20, 200, 0, 1, 1, 3),
-        ('srv-4', 'Duo or Couple Cards', 'Side-by-side reading exploring relationship dynamics across five deep questions for couples or duos.', 5, 25, 300, 1, 2, 1, 4);
+        ('srv-4', 'Duo or Couple Cards', 'Side-by-side reading exploring relationship dynamics across five deep questions for couples or duos.', 5, 25, 300, 1, 2, 1, 4),
+        ('srv-5', 'Customized Tarot', 'Tailored consultation crafted around your unique spread, complex situations, or bespoke multi-topic questions.', 0, 30, 0, 0, 1, 1, 5);
 
       -- Seed initial readers if empty
       INSERT OR IGNORE INTO readers (id, name, is_active)
@@ -319,10 +320,11 @@ export function initSqliteDb() {
       db.exec(`
         INSERT INTO services (id, name, description, card_count, duration_minutes, price_inr, is_group, group_size, is_active, sort_order)
         VALUES 
-          ('srv-1', 'Question Specific Tarot', 'Focused insight into your immediate burning question or specific situation.', 1, 8, 49, 0, 1, 1, 1),
-          ('srv-2', 'Destiny Card', 'Three cards drawn to reveal your path: one of life, one of love, and one of career.', 3, 15, 99, 0, 1, 1, 2),
+          ('srv-1', 'Question Specific Tarot', 'Focused insight into your immediate burning question. (Compulsory: Must complete a Destiny Card reading prior to this).', 1, 8, 49, 0, 1, 1, 1),
+          ('srv-2', 'Destiny Card', 'Three cards drawn to reveal your path: one of life, one of love, and one of career.', 3, 15, 150, 0, 1, 1, 2),
           ('srv-3', 'Love Specific Cards', 'Three focused questions uncovering three deep, love life-related answers and relationship clarity.', 3, 20, 200, 0, 1, 1, 3),
-          ('srv-4', 'Duo or Couple Cards', 'Side-by-side reading exploring relationship dynamics across five deep questions for couples or duos.', 5, 25, 300, 1, 2, 1, 4)
+          ('srv-4', 'Duo or Couple Cards', 'Side-by-side reading exploring relationship dynamics across five deep questions for couples or duos.', 5, 25, 300, 1, 2, 1, 4),
+          ('srv-5', 'Customized Tarot', 'Tailored consultation crafted around your unique spread, complex situations, or bespoke multi-topic questions.', 0, 30, 0, 0, 1, 1, 5)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
           description = excluded.description,

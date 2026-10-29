@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Service } from '@/types';
-import { Sparkles, Calendar, Clock, MessageSquare, Check, Loader2, Tag, AlertCircle, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Sparkles, Calendar, Clock, MessageSquare, Check, Loader2, Tag, AlertCircle, ArrowRight, ShieldCheck, MessageCircle } from 'lucide-react';
 import { formatInr, playMysticalChime } from '@/lib/utils';
 
 interface BookingFormProps {
@@ -211,12 +211,55 @@ export default function BookingForm({ services, preselectedServiceId, whatsappNu
             onChange={(e) => setSelectedServiceId(e.target.value)}
             className="w-full bg-black/60 border border-purple-800/80 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-400"
           >
-            {services.map((s) => (
-              <option key={s.id} value={s.id} className="bg-[#120824] text-white">
-                {s.name} ({s.duration_minutes}m • {formatInr(s.price_inr)})
-              </option>
-            ))}
+            {services.map((s) => {
+              const isCustom = s.name.toLowerCase().includes('custom');
+              return (
+                <option key={s.id} value={s.id} className="bg-[#120824] text-white">
+                  {s.name} ({s.duration_minutes}m • {isCustom || s.price_inr === 0 ? 'Customized' : formatInr(s.price_inr)})
+                </option>
+              );
+            })}
           </select>
+
+          {/* Prerequisite Alert for Question Specific Tarot */}
+          {selectedService?.name.toLowerCase().includes('question specific') && (
+            <div className="mt-2.5 p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-xs text-amber-200 flex flex-col gap-1.5">
+              <div className="flex items-center gap-1.5 font-bold text-amber-300">
+                <span>⚠️ Compulsory Prerequisite Notice</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-amber-100/90">
+                Before booking a <strong>Question Specific Tarot</strong> session, it is compulsory to have completed a <strong>Destiny Card (3 Cards)</strong> reading at least once.
+              </p>
+              <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  required
+                  className="rounded border-amber-500 text-amber-500 focus:ring-0 bg-black/60"
+                />
+                <span className="text-[11px] text-amber-200 font-medium">
+                  I confirm I have completed a Destiny Card reading prior to this.
+                </span>
+              </label>
+            </div>
+          )}
+
+          {/* WhatsApp Direct Option for Customized Tarot */}
+          {selectedService?.name.toLowerCase().includes('custom') && (
+            <div className="mt-2.5 p-3 rounded-xl bg-purple-900/40 border border-purple-700/50 text-xs text-purple-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <p className="text-[11px] text-purple-300 leading-relaxed text-center sm:text-left">
+                Need a custom reading or complex spread? You can also discuss directly on WhatsApp:
+              </p>
+              <a
+                href={`https://wa.me/${(whatsappNumber || '+919226634637').replace(/\D/g, '')}?text=${encodeURIComponent("Hi Vedant, I'd like to consult with you about a Customized Tarot reading.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shrink-0 shadow-md"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>Contact on WhatsApp</span>
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Full Name & Phone */}
@@ -337,7 +380,9 @@ export default function BookingForm({ services, preselectedServiceId, whatsappNu
             <p className="text-xs text-gray-400">{selectedService.name}</p>
           </div>
           <div className="text-right">
-            {discountInr > 0 ? (
+            {selectedService?.name.toLowerCase().includes('custom') || basePrice === 0 ? (
+              <span className="text-lg font-black text-amber-400">Customized</span>
+            ) : discountInr > 0 ? (
               <div>
                 <span className="text-xs text-gray-400 line-through mr-1.5">{formatInr(basePrice)}</span>
                 <span className="text-lg font-black text-amber-400">{formatInr(finalPrice)}</span>
@@ -345,7 +390,9 @@ export default function BookingForm({ services, preselectedServiceId, whatsappNu
             ) : (
               <span className="text-lg font-black text-amber-400">{formatInr(finalPrice)}</span>
             )}
-            <p className="text-[10px] text-purple-300/70">Payable after reading confirmation</p>
+            <p className="text-[10px] text-purple-300/70">
+              {selectedService?.name.toLowerCase().includes('custom') ? 'Quoted upon consultation' : 'Payable after reading confirmation'}
+            </p>
           </div>
         </div>
 
@@ -374,7 +421,11 @@ export default function BookingForm({ services, preselectedServiceId, whatsappNu
           ) : (
             <>
               <Sparkles className="w-4 h-4" />
-              <span>REQUEST READING FOR {formatInr(finalPrice)}</span>
+              <span>
+                {selectedService?.name.toLowerCase().includes('custom')
+                  ? 'REQUEST CUSTOMIZED CONSULTATION'
+                  : `REQUEST READING FOR ${formatInr(finalPrice)}`}
+              </span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}

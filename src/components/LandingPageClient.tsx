@@ -289,18 +289,23 @@ export default function LandingPageClient({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {services.map((service, index) => {
-            const isFeatured = index === 1; // Highlight the 3-card Destiny Card
             const lowerName = service.name.toLowerCase();
-            const badgeText = lowerName.includes('duo') || lowerName.includes('couple')
+            const isCustom = lowerName.includes('custom');
+            const isQuestionSpecific = lowerName.includes('question specific');
+            const isFeatured = lowerName.includes('destiny');
+
+            const badgeText = isCustom
+              ? 'Bespoke • Any Topic'
+              : lowerName.includes('duo') || lowerName.includes('couple')
               ? `${service.card_count} Questions • 2 People`
               : lowerName.includes('love specific')
               ? `${service.card_count} Questions • Love Life`
-              : lowerName.includes('destiny')
+              : isFeatured
               ? '3 Cards • Life, Love & Career'
-              : lowerName.includes('question specific')
-              ? '1 Question • 1 Card'
+              : isQuestionSpecific
+              ? '1 Question • Prerequisite'
               : `${service.card_count} ${service.card_count === 1 ? 'Card' : 'Cards'}`;
 
             return (
@@ -328,31 +333,64 @@ export default function LandingPageClient({
                     {service.name}
                   </h4>
 
-                  <p className="text-xs text-purple-200/80 leading-relaxed mb-4">
+                  <p className="text-xs text-purple-200/80 leading-relaxed mb-3">
                     {service.description}
                   </p>
+
+                  {/* Compulsory notice for Question Specific */}
+                  {isQuestionSpecific && (
+                    <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[10px] text-amber-300 font-medium leading-tight">
+                      ⚠️ <strong>Compulsory:</strong> Must complete a Destiny Card reading prior to this.
+                    </div>
+                  )}
+
+                  {/* Custom note for Customized Tarot */}
+                  {isCustom && (
+                    <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/30 text-[10px] text-purple-200 font-medium leading-tight">
+                      ✨ Bespoke spreads, career roadmaps, or multi-topic questions.
+                    </div>
+                  )}
                 </div>
 
                 <div>
                   <div className="pt-3 border-t border-purple-800/50 mb-3 flex items-baseline justify-between">
                     <span className="text-xs text-purple-300">Reading Fee</span>
-                    <span className="text-2xl font-black text-amber-400">
-                      {formatInr(service.price_inr)}
-                    </span>
+                    {isCustom || service.price_inr === 0 ? (
+                      <span className="text-xl font-black text-amber-400">
+                        Customized
+                      </span>
+                    ) : (
+                      <span className="text-2xl font-black text-amber-400">
+                        {formatInr(service.price_inr)}
+                      </span>
+                    )}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleSelectServiceAndScroll(service.id)}
-                    className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs tracking-wide transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
-                      isFeatured
-                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-black font-extrabold shadow-md'
-                        : 'bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-700/60 hover:text-white'
-                    }`}
-                  >
-                    <span>Book this</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  {isCustom ? (
+                    <a
+                      href={`https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hi Vedant, I'd like to consult with you about a Customized Tarot reading.")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => trackClick('customized_tarot_whatsapp')}
+                      className="w-full py-2.5 px-3 rounded-xl font-bold text-xs tracking-wide transition-all active:scale-95 flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white shadow-md border border-emerald-400/30"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                      <span>Contact on WhatsApp</span>
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleSelectServiceAndScroll(service.id)}
+                      className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs tracking-wide transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
+                        isFeatured
+                          ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-black font-extrabold shadow-md'
+                          : 'bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-700/60 hover:text-white'
+                      }`}
+                    >
+                      <span>Book this</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
             );
