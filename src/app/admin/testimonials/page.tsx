@@ -11,7 +11,7 @@ export default function AdminTestimonialsPage() {
   // Manual Add Review
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newService, setNewService] = useState('Past, Present & Future');
+  const [newService, setNewService] = useState('Destiny Card');
   const [newRating, setNewRating] = useState(5);
   const [newFeedback, setNewFeedback] = useState('');
   const [savingNew, setSavingNew] = useState(false);

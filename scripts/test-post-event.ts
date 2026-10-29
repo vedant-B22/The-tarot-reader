@@ -94,7 +94,7 @@ async function runTests() {
   console.log('\n[TEST 6] Testimonials & Feedback Moderation...');
   const newReview = createTestimonial({
     customer_name: 'Aarohi S.',
-    service_name: 'Past, Present & Future',
+    service_name: 'Destiny Card',
     rating: 5,
     feedback_text: 'The reading was amazingly accurate! Vedant pointed out specific things I was struggling with.',
     is_approved: false,

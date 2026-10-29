@@ -285,10 +285,10 @@ export function initSqliteDb() {
       -- Seed initial editable services if empty
       INSERT OR IGNORE INTO services (id, name, description, card_count, duration_minutes, price_inr, is_group, group_size, is_active, sort_order)
       VALUES 
-        ('srv-1', 'The Quick Glimpse (1 Card)', 'Quick insight into your immediate burning question or general aura for the evening.', 1, 8, 49, 0, 1, 1, 1),
-        ('srv-2', 'Past, Present & Future (3 Cards)', 'Deep dive into your journey: where you stood, where you are, and where destiny leads.', 3, 15, 99, 0, 1, 1, 2),
-        ('srv-3', 'Love, Romance & Twin Flame (5 Cards)', 'Unveil secrets of your heart, crush, relationships, and emotional blockages.', 5, 20, 149, 0, 1, 1, 3),
-        ('srv-4', 'Spooky Duo / Besties Reading (2 People)', 'Bond over fate! Side-by-side reading for two best friends or couples.', 6, 25, 179, 1, 2, 1, 4);
+        ('srv-1', 'Question Specific Tarot', 'Focused insight into your immediate burning question or specific situation.', 1, 8, 49, 0, 1, 1, 1),
+        ('srv-2', 'Destiny Card', 'Three cards drawn to reveal your path: one of life, one of love, and one of career.', 3, 15, 99, 0, 1, 1, 2),
+        ('srv-3', 'Love Specific Cards', 'Three focused questions uncovering three deep, love life-related answers and relationship clarity.', 3, 20, 200, 0, 1, 1, 3),
+        ('srv-4', 'Duo or Couple Cards', 'Side-by-side reading exploring relationship dynamics across five deep questions for couples or duos.', 5, 25, 300, 1, 2, 1, 4);
 
       -- Seed initial readers if empty
       INSERT OR IGNORE INTO readers (id, name, is_active)
@@ -312,6 +312,30 @@ export function initSqliteDb() {
     ];
     for (const alterSql of newSettingsCols) {
       try { db.exec(alterSql); } catch (e) {}
+    }
+
+    // Safe upsert to ensure services table matches latest post-event offerings
+    try {
+      db.exec(`
+        INSERT INTO services (id, name, description, card_count, duration_minutes, price_inr, is_group, group_size, is_active, sort_order)
+        VALUES 
+          ('srv-1', 'Question Specific Tarot', 'Focused insight into your immediate burning question or specific situation.', 1, 8, 49, 0, 1, 1, 1),
+          ('srv-2', 'Destiny Card', 'Three cards drawn to reveal your path: one of life, one of love, and one of career.', 3, 15, 99, 0, 1, 1, 2),
+          ('srv-3', 'Love Specific Cards', 'Three focused questions uncovering three deep, love life-related answers and relationship clarity.', 3, 20, 200, 0, 1, 1, 3),
+          ('srv-4', 'Duo or Couple Cards', 'Side-by-side reading exploring relationship dynamics across five deep questions for couples or duos.', 5, 25, 300, 1, 2, 1, 4)
+        ON CONFLICT(id) DO UPDATE SET
+          name = excluded.name,
+          description = excluded.description,
+          card_count = excluded.card_count,
+          duration_minutes = excluded.duration_minutes,
+          price_inr = excluded.price_inr,
+          is_group = excluded.is_group,
+          group_size = excluded.group_size,
+          is_active = excluded.is_active,
+          sort_order = excluded.sort_order;
+      `);
+    } catch (e) {
+      console.error('[SQLITE_INIT] Services upsert error:', e);
     }
 
     isInitialized = true;

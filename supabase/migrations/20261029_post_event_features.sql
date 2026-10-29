@@ -108,3 +108,22 @@ ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE upcoming_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE gallery_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE click_stats ENABLE ROW LEVEL SECURITY;
+
+-- 8. Post-Event Official Services & Offerings
+INSERT INTO services (id, name, description, card_count, duration_minutes, price_inr, is_group, group_size, is_active, sort_order)
+VALUES 
+  ('srv-1', 'Question Specific Tarot', 'Focused insight into your immediate burning question or specific situation.', 1, 8, 49, false, 1, true, 1),
+  ('srv-2', 'Destiny Card', 'Three cards drawn to reveal your path: one of life, one of love, and one of career.', 3, 15, 99, false, 1, true, 2),
+  ('srv-3', 'Love Specific Cards', 'Three focused questions uncovering three deep, love life-related answers and relationship clarity.', 3, 20, 200, false, 1, true, 3),
+  ('srv-4', 'Duo or Couple Cards', 'Side-by-side reading exploring relationship dynamics across five deep questions for couples or duos.', 5, 25, 300, true, 2, true, 4)
+ON CONFLICT(id) DO UPDATE SET
+  name = excluded.name,
+  description = excluded.description,
+  card_count = excluded.card_count,
+  duration_minutes = excluded.duration_minutes,
+  price_inr = excluded.price_inr,
+  is_group = excluded.is_group,
+  group_size = excluded.group_size,
+  is_active = excluded.is_active,
+  sort_order = excluded.sort_order;
+

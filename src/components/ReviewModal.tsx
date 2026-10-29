@@ -129,7 +129,7 @@ export default function ReviewModal({ isOpen, onClose }: ReviewModalProps) {
                 <label className="block text-xs font-semibold text-purple-200 mb-1">Reading Type</label>
                 <input
                   type="text"
-                  placeholder="e.g. Past, Present & Future or 1-on-1 Guidance"
+                  placeholder="e.g. Destiny Card, Love Specific, or Duo Reading"
                   value={service}
                   onChange={(e) => setService(e.target.value)}
                   className="w-full bg-black/60 border border-purple-800/80 rounded-xl px-3.5 py-2 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-amber-400"

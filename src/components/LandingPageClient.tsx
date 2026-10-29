@@ -291,7 +291,18 @@ export default function LandingPageClient({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {services.map((service, index) => {
-            const isFeatured = index === 1; // Highlight the 3-card Past/Present/Future
+            const isFeatured = index === 1; // Highlight the 3-card Destiny Card
+            const lowerName = service.name.toLowerCase();
+            const badgeText = lowerName.includes('duo') || lowerName.includes('couple')
+              ? `${service.card_count} Questions • 2 People`
+              : lowerName.includes('love specific')
+              ? `${service.card_count} Questions • Love Life`
+              : lowerName.includes('destiny')
+              ? '3 Cards • Life, Love & Career'
+              : lowerName.includes('question specific')
+              ? '1 Question • 1 Card'
+              : `${service.card_count} ${service.card_count === 1 ? 'Card' : 'Cards'}`;
+
             return (
               <div
                 key={service.id}
@@ -309,7 +320,7 @@ export default function LandingPageClient({
 
                 <div>
                   <div className="flex items-center justify-between text-[11px] text-purple-300/80 mb-2 font-mono">
-                    <span>{service.card_count} {service.card_count === 1 ? 'Card' : 'Cards'}</span>
+                    <span>{badgeText}</span>
                     <span>~{service.duration_minutes} Mins</span>
                   </div>
 
