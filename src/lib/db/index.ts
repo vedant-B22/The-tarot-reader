@@ -1477,9 +1477,9 @@ export function getAllLeadsSubscribers() {
   return db.prepare('SELECT * FROM leads_subscribers ORDER BY created_at DESC').all() as any[];
 }
 
-export function toggleLeadOptOut(id: string, isOptedOut: boolean) {
+export function toggleLeadOptOut(id: string, isOptedOut: boolean): any {
   db.prepare('UPDATE leads_subscribers SET is_opted_out = ? WHERE id = ?').run(isOptedOut ? 1 : 0, id);
-  return db.prepare('SELECT * FROM leads_subscribers WHERE id = ?').get(id);
+  return db.prepare('SELECT * FROM leads_subscribers WHERE id = ?').get(id) as any;
 }
 
 export function deleteLeadSubscriber(id: string): boolean {
@@ -1497,7 +1497,7 @@ export function createTestimonial(data: {
   feedback_text: string;
   token_id?: string;
   is_approved?: boolean;
-}) {
+}): any {
   const id = 'tst_' + Date.now().toString(36) + '_' + crypto.randomBytes(3).toString('hex');
   const now = new Date().toISOString();
 
@@ -1518,7 +1518,7 @@ export function createTestimonial(data: {
     created_at: now,
   });
 
-  return db.prepare('SELECT * FROM testimonials WHERE id = ?').get(id);
+  return db.prepare('SELECT * FROM testimonials WHERE id = ?').get(id) as any;
 }
 
 export function getAllTestimonials(approvedOnly = false) {
@@ -1534,9 +1534,9 @@ export function getAllTestimonials(approvedOnly = false) {
   }));
 }
 
-export function updateTestimonialApproval(id: string, isApproved: boolean) {
+export function updateTestimonialApproval(id: string, isApproved: boolean): any {
   db.prepare('UPDATE testimonials SET is_approved = ? WHERE id = ?').run(isApproved ? 1 : 0, id);
-  return db.prepare('SELECT * FROM testimonials WHERE id = ?').get(id);
+  return db.prepare('SELECT * FROM testimonials WHERE id = ?').get(id) as any;
 }
 
 export function deleteTestimonial(id: string): boolean {
@@ -1567,7 +1567,7 @@ export function createUpcomingEvent(data: {
   location: string;
   is_active?: boolean;
   sort_order?: number;
-}) {
+}): any {
   const id = 'evt_' + Date.now().toString(36) + '_' + crypto.randomBytes(3).toString('hex');
   const now = new Date().toISOString();
 
@@ -1588,7 +1588,7 @@ export function createUpcomingEvent(data: {
     created_at: now,
   });
 
-  return db.prepare('SELECT * FROM upcoming_events WHERE id = ?').get(id);
+  return db.prepare('SELECT * FROM upcoming_events WHERE id = ?').get(id) as any;
 }
 
 export function updateUpcomingEvent(id: string, updates: Partial<{
@@ -1598,7 +1598,7 @@ export function updateUpcomingEvent(id: string, updates: Partial<{
   location: string;
   is_active: boolean;
   sort_order: number;
-}>) {
+}>): any {
   const current = db.prepare('SELECT * FROM upcoming_events WHERE id = ?').get(id) as any;
   if (!current) return null;
 
@@ -1615,7 +1615,7 @@ export function updateUpcomingEvent(id: string, updates: Partial<{
     WHERE id = @id
   `).run(updated);
 
-  return db.prepare('SELECT * FROM upcoming_events WHERE id = ?').get(id);
+  return db.prepare('SELECT * FROM upcoming_events WHERE id = ?').get(id) as any;
 }
 
 export function deleteUpcomingEvent(id: string): boolean {
@@ -1630,7 +1630,7 @@ export function getAllGalleryImages() {
   return db.prepare('SELECT * FROM gallery_images ORDER BY sort_order ASC, created_at DESC').all() as any[];
 }
 
-export function createGalleryImage(data: { image_url: string; caption: string; sort_order?: number }) {
+export function createGalleryImage(data: { image_url: string; caption: string; sort_order?: number }): any {
   const id = 'img_' + Date.now().toString(36) + '_' + crypto.randomBytes(3).toString('hex');
   const now = new Date().toISOString();
 
@@ -1645,7 +1645,7 @@ export function createGalleryImage(data: { image_url: string; caption: string; s
     created_at: now,
   });
 
-  return db.prepare('SELECT * FROM gallery_images WHERE id = ?').get(id);
+  return db.prepare('SELECT * FROM gallery_images WHERE id = ?').get(id) as any;
 }
 
 export function deleteGalleryImage(id: string): boolean {
@@ -1656,7 +1656,7 @@ export function deleteGalleryImage(id: string): boolean {
 // -------------------------------------------------------------
 // POST-EVENT: FIRST-PARTY CLICK TRACKING REPOSITORY
 // -------------------------------------------------------------
-export function incrementClickStat(eventKey: string) {
+export function incrementClickStat(eventKey: string): any {
   const now = new Date().toISOString();
   db.prepare(`
     INSERT INTO click_stats (event_key, click_count, last_clicked_at)
@@ -1666,7 +1666,7 @@ export function incrementClickStat(eventKey: string) {
       last_clicked_at = excluded.last_clicked_at
   `).run(eventKey, now);
 
-  return db.prepare('SELECT * FROM click_stats WHERE event_key = ?').get(eventKey);
+  return db.prepare('SELECT * FROM click_stats WHERE event_key = ?').get(eventKey) as any;
 }
 
 export function getAllClickStats() {

@@ -98,7 +98,7 @@ async function runTests() {
     rating: 5,
     feedback_text: 'The reading was amazingly accurate! Vedant pointed out specific things I was struggling with.',
     is_approved: false,
-  });
+  }) as any;
   console.log(`  ✓ New review submitted as pending: ID ${newReview?.id}`);
   
   // Verify it is NOT public
@@ -134,8 +134,8 @@ async function runTests() {
     date_text: 'Dec 18 • 10:00 AM',
     location: 'Main Auditorium Quad',
     description: 'Walk-in readings & live tarot consultations.',
-  });
-  console.log(`  ✓ Created upcoming event: "${testEvent.title}"`);
+  }) as any;
+  console.log(`  ✓ Created upcoming event: "${testEvent?.title}"`);
   const activeEvents = getAllUpcomingEvents(true);
   console.log(`  ✓ Active upcoming events count: ${activeEvents.length}`);
 
