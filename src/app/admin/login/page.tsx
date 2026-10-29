@@ -45,7 +45,13 @@ export default function AdminLoginPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Authentication failed');
+        const errorMsg = data.error || 'Authentication failed';
+        if (errorMsg.toLowerCase().includes('already initialized')) {
+          setIsBootstrap(false);
+          setError('System is already initialized with an admin. Please sign in below.');
+        } else {
+          setError(errorMsg);
+        }
         setLoading(false);
         return;
       }
@@ -166,6 +172,32 @@ export default function AdminLoginPage() {
               </>
             )}
           </button>
+
+          <div className="pt-2 text-center">
+            {isBootstrap ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsBootstrap(false);
+                  setError(null);
+                }}
+                className="text-xs text-amber-400/90 hover:text-amber-300 underline underline-offset-2 transition-colors cursor-pointer"
+              >
+                Already initialized? Sign in with existing credentials
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsBootstrap(true);
+                  setError(null);
+                }}
+                className="text-xs text-purple-400/80 hover:text-purple-300 underline underline-offset-2 transition-colors cursor-pointer"
+              >
+                First time? Setup Super Admin account
+              </button>
+            )}
+          </div>
         </form>
       </div>
     </div>

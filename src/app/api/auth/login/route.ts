@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminByEmail, touchAdminActive, logAudit } from '@/lib/db';
 import { verifyPassword, createAdminToken } from '@/lib/auth';
+import { fetchAdminFromSupabaseByEmail } from '@/lib/db/supabase-sync';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +13,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 });
     }
 
-    const admin = getAdminByEmail(email);
+    const cleanEmail = email.toLowerCase().trim();
+    let admin = getAdminByEmail(cleanEmail);
+
+    // If local container doesn't have this admin, fetch from persistent Supabase
+    if (!admin) {
+      admin = await fetchAdminFromSupabaseByEmail(cleanEmail);
+    }
+
     if (!admin) {
       return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
     }

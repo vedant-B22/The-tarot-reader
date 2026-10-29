@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFromRequest } from '@/lib/auth';
 import { getSettings, updateSettings } from '@/lib/db';
 import { broadcastRealtimeEvent } from '@/lib/realtime';
+import { pushSettingsToSupabase } from '@/lib/db/supabase-sync';
 import fs from 'fs';
 import path from 'path';
 
@@ -58,12 +59,14 @@ export async function POST(req: NextRequest) {
       });
 
       const updated = updateSettings(updates, admin.id, admin.name);
+      await pushSettingsToSupabase(updated);
       broadcastRealtimeEvent('settings_updated', { settings: updated });
       return NextResponse.json({ success: true, settings: updated });
     }
 
     const json = await req.json();
     const updated = updateSettings(json, admin.id, admin.name);
+    await pushSettingsToSupabase(updated);
     broadcastRealtimeEvent('settings_updated', { settings: updated });
     return NextResponse.json({ success: true, settings: updated });
   } catch (err: any) {

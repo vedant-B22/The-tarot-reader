@@ -3,6 +3,7 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { getAdminById, getAdminCount, createAdmin } from './db';
+import { fetchAdminFromSupabase, upsertLocalAdmin, pushAdminToSupabase, syncAdminsFromSupabase } from './db/supabase-sync';
 import { AdminUser, AdminPermissions } from '@/types';
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -42,6 +43,10 @@ export async function createAdminToken(admin: AdminUser): Promise<string> {
     email: admin.email,
     role: admin.role,
     name: admin.name,
+    can_edit_prices: admin.can_edit_prices,
+    can_create_discounts: admin.can_create_discounts,
+    can_issue_refunds: admin.can_issue_refunds,
+    can_override_queue: admin.can_override_queue,
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -53,7 +58,34 @@ export async function verifyAdminToken(token: string): Promise<AdminUser | null>
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
     if (!payload.sub) return null;
-    const admin = getAdminById(payload.sub);
+
+    // 1. Check local SQLite cache
+    let admin = getAdminById(payload.sub);
+
+    // 2. If not found (e.g. cold serverless lambda container), fetch from Supabase
+    if (!admin) {
+      admin = await fetchAdminFromSupabase(payload.sub);
+    }
+
+    // 3. Fallback: reconstitute verified admin directly from signed cryptographic JWT claims
+    if (!admin && payload.email && payload.name) {
+      admin = {
+        id: String(payload.sub),
+        email: String(payload.email),
+        name: String(payload.name),
+        role: (payload.role as 'super_admin' | 'admin') || 'admin',
+        is_active: true,
+        can_edit_prices: Boolean(payload.can_edit_prices),
+        can_create_discounts: Boolean(payload.can_create_discounts),
+        can_issue_refunds: Boolean(payload.can_issue_refunds),
+        can_override_queue: payload.can_override_queue !== false,
+        last_active_at: null,
+        password_hash: '',
+        created_at: new Date().toISOString(),
+      };
+      upsertLocalAdmin(admin);
+    }
+
     if (!admin || !admin.is_active) return null;
     return admin;
   } catch {
@@ -143,7 +175,7 @@ export function ensureSuperAdminBootstrap() {
     const envName = process.env.ADMIN_SUPER_NAME || 'Lead Tarot Master';
 
     if (envEmail && envPassword) {
-      createAdmin({
+      const admin = createAdmin({
         email: envEmail,
         password_hash: hashPassword(envPassword),
         name: envName,
@@ -153,6 +185,7 @@ export function ensureSuperAdminBootstrap() {
         can_issue_refunds: true,
         can_override_queue: true,
       }, 'System Bootstrap');
+      pushAdminToSupabase(admin).catch(() => {});
       console.log(`[BOOTSTRAP] Super Admin seeded from environment: ${envEmail}`);
     }
   }

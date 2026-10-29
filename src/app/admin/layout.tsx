@@ -43,12 +43,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return;
     }
 
+    let isMounted = true;
     fetch('/api/auth/me')
       .then(res => {
         if (!res.ok) throw new Error('Unauthenticated');
         return res.json();
       })
       .then(data => {
+        if (!isMounted) return;
         if (!data.authenticated) {
           router.push('/admin/login');
         } else {
@@ -56,9 +58,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
       })
       .catch(() => {
-        router.push('/admin/login');
+        if (!isMounted) return;
+        setAdmin((current: any) => {
+          if (!current) {
+            router.push('/admin/login');
+          }
+          return current;
+        });
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [pathname, isLoginPage, router]);
 
   const handleLogout = async () => {

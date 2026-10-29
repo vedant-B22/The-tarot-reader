@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFromRequest } from '@/lib/auth';
 import { getAllAdmins, createAdmin, updateAdmin, deleteAdmin, getAdminByEmail } from '@/lib/db';
 import { hashPassword } from '@/lib/auth';
+import { syncAdminsFromSupabase, pushAdminToSupabase, deleteAdminFromSupabase } from '@/lib/db/supabase-sync';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,12 +12,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Super Admin access required' }, { status: 403 });
   }
 
-  const admins = getAllAdmins().map(a => {
+  let admins = getAllAdmins();
+  if (admins.length <= 1) {
+    await syncAdminsFromSupabase();
+    admins = getAllAdmins();
+  }
+
+  const safeAdmins = admins.map(a => {
     const { password_hash, ...safeAdmin } = a;
     return safeAdmin;
   });
 
-  return NextResponse.json({ admins });
+  return NextResponse.json({ admins: safeAdmins });
 }
 
 export async function POST(req: NextRequest) {
@@ -54,6 +61,8 @@ export async function POST(req: NextRequest) {
       can_override_queue: can_override_queue !== undefined ? Boolean(can_override_queue) : true,
     }, admin.name);
 
+    await pushAdminToSupabase(newAdmin);
+
     const { password_hash, ...safeAdmin } = newAdmin;
     return NextResponse.json({ success: true, admin: safeAdmin });
   } catch (err: any) {
@@ -78,6 +87,8 @@ export async function PUT(req: NextRequest) {
     const updated = updateAdmin(id, updates, admin.name);
     if (!updated) return NextResponse.json({ error: 'Admin not found' }, { status: 404 });
 
+    await pushAdminToSupabase(updated);
+
     const { password_hash, ...safeAdmin } = updated;
     return NextResponse.json({ success: true, admin: safeAdmin });
   } catch (err: any) {
@@ -99,6 +110,8 @@ export async function DELETE(req: NextRequest) {
   if (!success) {
     return NextResponse.json({ error: 'Cannot delete Super Admin account' }, { status: 400 });
   }
+
+  await deleteAdminFromSupabase(id);
 
   return NextResponse.json({ success: true });
 }

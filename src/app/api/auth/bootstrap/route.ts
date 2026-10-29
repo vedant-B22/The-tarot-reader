@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminCount, createAdmin } from '@/lib/db';
 import { hashPassword, createAdminToken, ensureSuperAdminBootstrap } from '@/lib/auth';
+import { syncAdminsFromSupabase, pushAdminToSupabase } from '@/lib/db/supabase-sync';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   ensureSuperAdminBootstrap();
-  const count = getAdminCount();
+  let count = getAdminCount();
+  if (count === 0) {
+    count = await syncAdminsFromSupabase();
+  }
+
   return NextResponse.json({
     needsBootstrap: count === 0,
     totalAdmins: count,
@@ -15,9 +20,13 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const count = getAdminCount();
+    let count = getAdminCount();
+    if (count === 0) {
+      count = await syncAdminsFromSupabase();
+    }
+
     if (count > 0) {
-      return NextResponse.json({ error: 'System is already initialized with an admin.' }, { status: 400 });
+      return NextResponse.json({ error: 'System is already initialized with an admin. Please sign in.' }, { status: 400 });
     }
 
     const { email, password, name } = await req.json();
@@ -40,6 +49,9 @@ export async function POST(req: NextRequest) {
       can_issue_refunds: true,
       can_override_queue: true,
     }, 'First Run Wizard');
+
+    // Persist to Supabase across all serverless containers
+    await pushAdminToSupabase(admin);
 
     const token = await createAdminToken(admin);
 
